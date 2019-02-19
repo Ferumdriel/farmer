@@ -18,7 +18,7 @@ import random
 class Breeder:
     @staticmethod
     def count_new_animals(present_animals, animals_on_sides):
-        return int((present_animals + animals_on_sides) / 2)
+        return 0 if animals_on_sides == 0 else int((present_animals + animals_on_sides) / 2)
 
 
 class Dice:
