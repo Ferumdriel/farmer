@@ -41,3 +41,5 @@ class TradeTest(unittest.TestCase):
         self.assertTrue(trade.is_trade_possible(Animal.RABBIT, Animal.SHEEP, 12, 2))
         self.assertFalse(trade.is_trade_possible(Animal.RABBIT, Animal.SHEEP, 17, 3))
         self.assertFalse(trade.is_trade_possible(Animal.SHEEP, Animal.SHEEP, 1, 1))
+        self.assertTrue(trade.is_trade_possible(Animal.SHEEP, Animal.RABBIT, 3, 15))
+        self.assertTrue(trade.is_trade_possible(Animal.SHEEP, Animal.RABBIT, 3, 18))

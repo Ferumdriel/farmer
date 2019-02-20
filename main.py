@@ -55,5 +55,8 @@ class Trade:
                           desired_amount: int) -> bool:
         for rule in self.trade_rules:
             if bought_animal in rule and sold_animal in rule:
-                return total_available / rule[2] >= desired_amount
+                if rule.index(bought_animal) == 1:
+                    return total_available / rule[2] >= desired_amount
+                else:
+                    return total_available * rule[2] >= desired_amount
         return False
