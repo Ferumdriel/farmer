@@ -1,5 +1,5 @@
 import unittest
-from main import Breeder, Farm
+from main import Breeder, Farm, Dice, Animal
 
 
 class BreederTest(unittest.TestCase):
@@ -21,3 +21,15 @@ class FarmTest(unittest.TestCase):
             self.assertEqual(expected_total_animals, farm.animals)
 
         _check_farm(animals=[2, 0, 2], dice_animals=[1, 2, 0], expected_total_animals=[3, 1, 2])
+
+
+class DiceTest(unittest.TestCase):
+    def test_throw(self):
+        def _check_dice(animals, checked_idx, expected_return):
+            dice = Dice(animals)
+            self.assertEqual(dice._get_side_animal_by_idx(checked_idx), expected_return)
+        _check_dice([Animal.RABBIT, Animal.SHEEP], 0, Animal.RABBIT)
+        _check_dice([], 0, None)
+        _check_dice([Animal.RABBIT, Animal.SHEEP], 2, None)
+
+
