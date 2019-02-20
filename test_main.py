@@ -1,5 +1,5 @@
 import unittest
-from main import Breeder, Farm, Dice, Animal, Trade
+from main import Breeder, Farm, Dice, Animal, Trade, TradeRule
 
 
 class BreederTest(unittest.TestCase):
@@ -36,7 +36,7 @@ class DiceTest(unittest.TestCase):
 
 class TradeTest(unittest.TestCase):
     def test_trade_conditions(self):
-        trade_rule = (Animal.RABBIT, Animal.SHEEP, 6)
+        trade_rule = TradeRule(Animal.RABBIT, Animal.SHEEP, 6)
         trade = Trade([trade_rule])
         self.assertTrue(trade.is_trade_possible(Animal.RABBIT, Animal.SHEEP, 12, 2))
         self.assertFalse(trade.is_trade_possible(Animal.RABBIT, Animal.SHEEP, 17, 3))

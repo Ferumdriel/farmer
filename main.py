@@ -47,6 +47,19 @@ class Dice:
         return self._get_side_animal_by_idx(random.randint(0, len(self.animals) - 1))
 
 
+class TradeRule:
+    def __init__(self, a1, a2, price):
+        self.a1 = a1
+        self.a2 = a2
+        self.price = price
+
+    def is_both_present(self, a1, a2):
+        return (a1 == self.a1 and a2 == self.a2) or (a1 == self.a2 and a2 == self.a1)
+
+    def get_multiplier(self, a1, a2):
+        return self.price if a1 == self.a1 and a2 == self.a2 else 1 / self.price
+
+
 class Trade:
     def __init__(self, trade_rules):
         self.trade_rules = trade_rules
@@ -54,9 +67,6 @@ class Trade:
     def is_trade_possible(self, sold_animal: Animal, bought_animal: Animal, total_available: int,
                           desired_amount: int) -> bool:
         for rule in self.trade_rules:
-            if bought_animal in rule and sold_animal in rule:
-                if rule.index(bought_animal) == 1:
-                    return total_available / rule[2] >= desired_amount
-                else:
-                    return total_available * rule[2] >= desired_amount
+            if rule.is_both_present(sold_animal, bought_animal):
+                    return total_available / rule.get_multiplier(sold_animal, bought_animal) >= desired_amount
         return False
