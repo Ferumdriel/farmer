@@ -1,18 +1,23 @@
 import abc
-import enum
+from enum import Enum, auto
 import random
 
 
-# class Animal(enum.Enum):
-#     RABBIT = 1
-#     SHEEP = RABBIT.value * 6
-#     SMALL_DOG = SHEEP.value
-#     PIG = SHEEP.value * 2
-#     COW = PIG.value * 3
-#     BIG_DOG = COW.value
-#     HORSE = COW.value * 2
-#     FOX = 0
-#     WOLF = 0
+class AutoName(Enum):
+    def _generate_next_value_(name, start, count, last_values):
+        return name
+
+
+class Animal(AutoName):
+    RABBIT = auto()
+    SHEEP = auto()
+    SMALL_DOG = auto()
+    PIG = auto()
+    COW = auto()
+    BIG_DOG = auto()
+    HORSE = auto()
+    FOX = auto()
+    WOLF = auto()
 
 
 class Breeder:
@@ -20,9 +25,10 @@ class Breeder:
     def count_new_animals(present_animals, animals_on_sides):
         return 0 if animals_on_sides == 0 else int((present_animals + animals_on_sides) / 2)
 
+
 class Farm:
     def __init__(self):
-        self.animals = [0,0,0]
+        self.animals = [0, 0, 0]
 
     def breed_animals(self, dice_animals):
         new_animals = [Breeder.count_new_animals(ex, dice) for ex, dice in zip(self.animals, dice_animals)]
@@ -30,13 +36,12 @@ class Farm:
             self.animals[i] += to_add
 
 
-
 class Dice:
     def __init__(self, animals: list):
         self.animals = animals
 
-    def _get_side_animal(self, side: int):
-        return self.animals[side]
+    def _get_side_animal_by_idx(self, side: int):
+        return None if (side > len(self.animals)-1 or len(self.animals) == 0) else self.animals[side]
 
-    def throw(self):
-        return self._get_side_animal(random.randint(0, len(self.animals) - 1))
+    def throw(self) -> Animal:
+        return self._get_side_animal_by_idx(random.randint(0, len(self.animals) - 1))
