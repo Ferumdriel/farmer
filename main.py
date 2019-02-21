@@ -48,8 +48,18 @@ class Farm:
     def breed_animals(self, dice_animals: list):
         counter = collections.Counter(dice_animals)
         for animal, amount in counter.items():
-            bred_animals = Breeder.count_new_animals(self.animals[animal], amount)
-            self.animals[animal] += bred_animals
+            try:
+                bred_animals = Breeder.count_new_animals(self.animals[animal], amount)
+                self.animals[animal] += bred_animals
+            except KeyError:
+                if animal == Animal.FOX:
+                    print('Oh no! Fox ate all your rabbits!')
+                    self.animals[Animal.RABBIT] = 0
+                elif animal == Animal.WOLF:
+                    print('Oh no! Wolf ate everything except horses!')
+                    for farm_animal in self.animals.keys():
+                        if farm_animal != Animal.HORSE:
+                            self.animals[farm_animal] = 0
 
     def print_state(self):
         print(self.animals)
