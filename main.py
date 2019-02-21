@@ -51,6 +51,9 @@ class Farm:
             bred_animals = Breeder.count_new_animals(self.animals[animal], amount)
             self.animals[animal] += bred_animals
 
+    def print_state(self):
+        print(self.animals)
+
 
 class Dice:
     def __init__(self, animals: list):
@@ -121,6 +124,18 @@ class TurnHandler:
 
 
 if __name__ == '__main__':
+    farm = Farm()
+    animals = list(Animal)[:-4]
+    dices = [Dice(list(Animal)[:-4] + [Animal.FOX]), Dice(list(Animal)[:-4] + [Animal.WOLF])]
+
+
+    def _roll_dices():
+        animals = [dice.throw() for dice in dices]
+        print(f'You threw: {animals}')
+        farm.breed_animals(animals)
+        farm.print_state()
+
+
     options = {1: 'Roll dices',
                2: 'Trade',
                3: 'Exit'}
@@ -131,6 +146,8 @@ if __name__ == '__main__':
         print(f'{key}. {value}')
     option = int(input())
     print(f'You chose option: {option}')
+    if option == 1:
+        _roll_dices()
     # Other turns
     while option in keys[:-1]:
         print(f'Which option do you choose?')
@@ -138,3 +155,5 @@ if __name__ == '__main__':
             print(f'{key}. {value}')
         option = int(input())
         print(f'You chose option: {option}')
+        if option == 1:
+            _roll_dices()
