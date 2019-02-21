@@ -47,6 +47,10 @@ class Farm:
 
     def breed_animals(self, dice_animals: list):
         counter = collections.Counter(dice_animals)
+        if Animal.FOX in counter:
+            del counter[Animal.RABBIT]
+        if Animal.WOLF in counter:
+            counter = collections.Counter([Animal.WOLF])
         for animal, amount in counter.items():
             try:
                 bred_animals = Breeder.count_new_animals(self.animals[animal], amount)

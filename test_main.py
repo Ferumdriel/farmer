@@ -25,7 +25,9 @@ class FarmTest(unittest.TestCase):
         _check_farm(animals={Animal.RABBIT: 2, Animal.SHEEP: 0, Animal.PIG: 2},
                     dice_animals=[Animal.RABBIT, Animal.WOLF, Animal.SHEEP],
                     expected_total_animals={Animal.RABBIT: 0, Animal.SHEEP: 0, Animal.PIG: 0})
-
+        _check_farm(animals={Animal.RABBIT: 2, Animal.SHEEP: 0, Animal.PIG: 2},
+                    dice_animals=[Animal.FOX, Animal.RABBIT, Animal.RABBIT],
+                    expected_total_animals={Animal.RABBIT: 0, Animal.SHEEP: 0, Animal.PIG: 2})
 
 
 class DiceTest(unittest.TestCase):
