@@ -75,3 +75,49 @@ class Trade:
         matching_rule = _get_matching_rule(sold_animal, bought_animal)
         return False if matching_rule is None else total_available / matching_rule.get_multiplier(sold_animal,
                                                                                                   bought_animal) >= desired_amount
+
+#TODO: Command design pattern might be a good suit for Turn and TurnHandler
+class Turn:
+    def __init__(self, action, previous_turn=None):
+        self.action = action
+        self.previous_turn = previous_turn
+
+class TurnHandler:
+
+    def __init__(self):
+        self.turns = []
+        self.options = {1: 'Roll dices',
+                        2: 'Trade',
+                        3: 'Exit'}
+
+    def resolve_turn(self):
+        self.print_possibilities()
+        option = self.pick_option()
+
+
+    def print_possibilities(self):
+        print(f'Which option do you choose?')
+        for key, value in self.options.items():
+            print(f'{key}. {value}')
+
+    def pick_option(self):
+        return input()
+
+if __name__ == '__main__':
+    options = {1: 'Roll dices',
+               2: 'Trade',
+               3: 'Exit'}
+    keys = list(options.keys())
+    # First turn
+    print(f'Which option do you choose?')
+    for key, value in options.items():
+        print(f'{key}. {value}')
+    option = int(input())
+    print(f'You chose option: {option}')
+    #Other turns
+    while option in keys[:-1]:
+        print(f'Which option do you choose?')
+        for key, value in options.items():
+            print(f'{key}. {value}')
+        option = int(input())
+        print(f'You chose option: {option}')
