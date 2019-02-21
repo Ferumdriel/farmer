@@ -1,4 +1,5 @@
 import abc
+import collections
 from enum import Enum, auto
 import random
 
@@ -11,11 +12,13 @@ class AutoName(Enum):
 class Animal(AutoName):
     RABBIT = auto()
     SHEEP = auto()
-    SMALL_DOG = auto()
     PIG = auto()
     COW = auto()
-    BIG_DOG = auto()
     HORSE = auto()
+
+    SMALL_DOG = auto()
+    BIG_DOG = auto()
+
     FOX = auto()
     WOLF = auto()
 
@@ -42,8 +45,9 @@ class Farm:
         for animal in animals:
             self.animals[animal] = 0
 
-    def breed_animals(self, dice_animals: dict):
-        for animal, amount in dice_animals.items():
+    def breed_animals(self, dice_animals: list):
+        counter = collections.Counter(dice_animals)
+        for animal, amount in counter.items():
             bred_animals = Breeder.count_new_animals(self.animals[animal], amount)
             self.animals[animal] += bred_animals
 
@@ -97,7 +101,6 @@ class Turn:
 
 
 class TurnHandler:
-
     def __init__(self):
         self.turns = []
         self.options = {1: 'Roll dices',

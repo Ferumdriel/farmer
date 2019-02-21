@@ -20,7 +20,7 @@ class FarmTest(unittest.TestCase):
             self.assertEqual(expected_total_animals, farm.animals)
 
         _check_farm(animals={Animal.RABBIT: 2, Animal.SHEEP: 0, Animal.PIG: 2},
-                    dice_animals={Animal.RABBIT: 1, Animal.SHEEP: 2},
+                    dice_animals=[Animal.RABBIT, Animal.SHEEP, Animal.SHEEP],
                     expected_total_animals={Animal.RABBIT: 3, Animal.SHEEP: 1, Animal.PIG:2})
 
 
