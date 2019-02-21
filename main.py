@@ -19,21 +19,33 @@ class Animal(AutoName):
     FOX = auto()
     WOLF = auto()
 
+    @staticmethod
+    def get_farm_animals():
+        return [Animal.RABBIT, Animal.SHEEP, Animal.PIG, Animal.COW, Animal.HORSE]
+
 
 class Breeder:
     @staticmethod
-    def count_new_animals(present_animals, animals_on_sides) -> int:
+    def count_new_animals(present_animals: int, animals_on_sides: int) -> int:
         return 0 if animals_on_sides == 0 else int((present_animals + animals_on_sides) / 2)
 
 
 class Farm:
-    def __init__(self):
-        self.animals = [0, 0, 0]
+    def __init__(self, animals=None):
+        self.animals = animals
+        if self.animals is None:
+            self._initialize_animals()
 
-    def breed_animals(self, dice_animals):
-        new_animals = [Breeder.count_new_animals(ex, dice) for ex, dice in zip(self.animals, dice_animals)]
-        for i, to_add in enumerate(new_animals):
-            self.animals[i] += to_add
+    def _initialize_animals(self):
+        self.animals = {}
+        animals = Animal.get_farm_animals()
+        for animal in animals:
+            self.animals[animal] = 0
+
+    def breed_animals(self, dice_animals: dict):
+        for animal, amount in dice_animals.items():
+            bred_animals = Breeder.count_new_animals(self.animals[animal], amount)
+            self.animals[animal] += bred_animals
 
 
 class Dice:
@@ -76,11 +88,13 @@ class Trade:
         return False if matching_rule is None else total_available / matching_rule.get_multiplier(sold_animal,
                                                                                                   bought_animal) >= desired_amount
 
-#TODO: Command design pattern might be a good suit for Turn and TurnHandler
+
+# TODO: Command design pattern might be a good suit for Turn and TurnHandler
 class Turn:
     def __init__(self, action, previous_turn=None):
         self.action = action
         self.previous_turn = previous_turn
+
 
 class TurnHandler:
 
@@ -94,7 +108,6 @@ class TurnHandler:
         self.print_possibilities()
         option = self.pick_option()
 
-
     def print_possibilities(self):
         print(f'Which option do you choose?')
         for key, value in self.options.items():
@@ -102,6 +115,7 @@ class TurnHandler:
 
     def pick_option(self):
         return input()
+
 
 if __name__ == '__main__':
     options = {1: 'Roll dices',
@@ -114,7 +128,7 @@ if __name__ == '__main__':
         print(f'{key}. {value}')
     option = int(input())
     print(f'You chose option: {option}')
-    #Other turns
+    # Other turns
     while option in keys[:-1]:
         print(f'Which option do you choose?')
         for key, value in options.items():
