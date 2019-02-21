@@ -66,7 +66,12 @@ class Trade:
 
     def is_trade_possible(self, sold_animal: Animal, bought_animal: Animal, total_available: int,
                           desired_amount: int) -> bool:
-        for rule in self.trade_rules:
-            if rule.is_both_present(sold_animal, bought_animal):
-                    return total_available / rule.get_multiplier(sold_animal, bought_animal) >= desired_amount
-        return False
+        def _get_matching_rule(_sold_animal, _bought_animal):
+            for rule in self.trade_rules:
+                if rule.is_both_present(_sold_animal, _bought_animal):
+                    return rule
+            return None
+
+        matching_rule = _get_matching_rule(sold_animal, bought_animal)
+        return False if matching_rule is None else total_available / matching_rule.get_multiplier(sold_animal,
+                                                                                                  bought_animal) >= desired_amount
