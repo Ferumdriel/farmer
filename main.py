@@ -8,6 +8,8 @@ class AutoName(Enum):
     def _generate_next_value_(name, start, count, last_values):
         return name
 
+    def __repr__(self):
+        return self.name
 
 class Animal(AutoName):
     RABBIT = auto()
@@ -137,37 +139,44 @@ class TurnHandler:
         return input()
 
 
-if __name__ == '__main__':
-    farm = Farm()
-    animals = list(Animal)[:-4]
-    dices = [Dice(list(Animal)[:-4] + [Animal.FOX]), Dice(list(Animal)[:-4] + [Animal.WOLF])]
+class Game:
+    def __init__(self):
+        self.farm = Farm()
+        self.dices = [Dice(6 * [Animal.RABBIT] + 3 * [Animal.SHEEP] + [Animal.PIG, Animal.COW, Animal.WOLF]),
+                      Dice(6 * [Animal.RABBIT] + 2 * [Animal.SHEEP, Animal.PIG] + [Animal.HORSE, Animal.FOX])]
+        self.options = {1: 'Roll dices',
+                        2: 'Trade',
+                        3: 'Exit'}
 
-
-    def _roll_dices():
-        animals = [dice.throw() for dice in dices]
-        print(f'You threw: {animals}')
-        farm.breed_animals(animals)
-        farm.print_state()
-
-
-    options = {1: 'Roll dices',
-               2: 'Trade',
-               3: 'Exit'}
-    keys = list(options.keys())
-    # First turn
-    print(f'Which option do you choose?')
-    for key, value in options.items():
-        print(f'{key}. {value}')
-    option = int(input())
-    print(f'You chose option: {option}')
-    if option == 1:
-        _roll_dices()
-    # Other turns
-    while option in keys[:-1]:
-        print(f'Which option do you choose?')
-        for key, value in options.items():
-            print(f'{key}. {value}')
-        option = int(input())
-        print(f'You chose option: {option}')
+    def resolve_turn(self):
+        def _roll_dices():
+            animals = [dice.throw() for dice in self.dices]
+            print(f'You threw: {animals}')
+            self.farm.breed_animals(animals)
+            self.farm.print_state()
+        self.print_options()
+        option = int(input('Enter value: '))
         if option == 1:
             _roll_dices()
+        return option
+
+    def print_options(self):
+        print('Which option do you choose?')
+        print(self.options_txt)
+
+    @property
+    def options_txt(self):
+        opt_text = ''
+        for key, value in self.options.items():
+            opt_text += f'{key}. {value}\n'
+        return opt_text
+
+    def main_loop(self):
+        option = self.resolve_turn()
+        while option in list(self.options.keys())[:-1]:
+            option = self.resolve_turn()
+
+
+if __name__ == '__main__':
+    game = Game()
+    game.main_loop()
