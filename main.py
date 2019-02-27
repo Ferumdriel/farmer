@@ -11,6 +11,7 @@ class AutoName(Enum):
     def __repr__(self):
         return self.name
 
+
 class Animal(AutoName):
     RABBIT = auto()
     SHEEP = auto()
@@ -100,34 +101,44 @@ class TradeValues:
             print(f'Key {animal} does not exist.')
         return value
 
+
 class TradeRule:
-    def __init__(self, a1, a2, price):
+    def __init__(self, a1: Animal, a2: Animal):
         self.a1 = a1
         self.a2 = a2
-        self.price = price
 
     def is_both_present(self, a1, a2):
         return (a1 == self.a1 and a2 == self.a2) or (a1 == self.a2 and a2 == self.a1)
 
-    def get_multiplier(self, a1, a2):
-        return self.price if a1 == self.a1 and a2 == self.a2 else 1 / self.price
 
 
 class Trade:
     def __init__(self, trade_rules):
         self.trade_rules = trade_rules
+        self.trade_values = TradeValues()
+
+    def trade(self, sold_animal: Animal, bought_animal: Animal, farm: Farm, desired_amount: int):
+        if self.is_trade_possible(sold_animal, bought_animal, farm.animals[sold_animal], desired_amount):
+            multiplier = self.get_multiplier(sold_animal, bought_animal)
+            farm.animals[sold_animal] -= desired_amount * multiplier
+            farm.animals[bought_animal] += desired_amount
 
     def is_trade_possible(self, sold_animal: Animal, bought_animal: Animal, total_available: int,
                           desired_amount: int) -> bool:
-        def _get_matching_rule(_sold_animal, _bought_animal):
-            for rule in self.trade_rules:
-                if rule.is_both_present(_sold_animal, _bought_animal):
-                    return rule
-            return None
+        if self.get_matching_rule(sold_animal, bought_animal) is None:
+            return False
+        return total_available / self.get_multiplier(sold_animal,bought_animal) >= desired_amount
 
-        matching_rule = _get_matching_rule(sold_animal, bought_animal)
-        return False if matching_rule is None else total_available / matching_rule.get_multiplier(sold_animal,
-                                                                                                  bought_animal) >= desired_amount
+    def get_matching_rule(self, a1: Animal, a2: Animal) -> TradeRule:
+        for rule in self.trade_rules:
+            if rule.is_both_present(a1, a2):
+                return rule
+        return None
+
+    def get_multiplier(self, sold_animal: Animal, bought_animal: Animal):
+        value1 = self.trade_values.get_value(sold_animal)
+        value2 = self.trade_values.get_value(bought_animal)
+        return value2 if value1 < value2 else 1 / value1
 
 
 # TODO: Command design pattern might be a good suit for Turn and TurnHandler
@@ -165,7 +176,8 @@ class Game:
         self.options = {1: 'Roll dices',
                         2: 'Trade',
                         3: 'Exit'}
-        self.trade = Trade()
+        # FIXME Some variable to check if animal is tradeable might be better
+        self.trade = Trade([TradeRule(Animal.RABBIT, Animal.SHEEP)] )
 
     def resolve_turn(self):
         def _roll_dices():
@@ -173,6 +185,7 @@ class Game:
             print(f'You threw: {animals}')
             self.farm.breed_animals(animals)
             self.farm.print_state()
+
         self.print_options()
         option = int(input('Enter value: '))
         if option == 1:
