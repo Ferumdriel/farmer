@@ -82,6 +82,24 @@ class Dice:
         return self._get_side_animal_by_idx(random.randint(0, len(self.animals) - 1))
 
 
+class TradeValues:
+    def __init__(self):
+        self.values = {Animal.RABBIT: 1}
+        self.values[Animal.SHEEP] = self.values[Animal.RABBIT] * 6
+        self.values[Animal.PIG] = self.values[Animal.SHEEP] * 2
+        self.values[Animal.COW] = self.values[Animal.PIG] * 3
+        self.values[Animal.HORSE] = self.values[Animal.COW] * 2
+        self.values[Animal.SMALL_DOG] = self.values[Animal.RABBIT] * 6
+        self.values[Animal.BIG_DOG] = self.values[Animal.COW]
+
+    def get_value(self, animal: Animal):
+        value = 0
+        try:
+            value = self.values[animal]
+        except KeyError:
+            print(f'Key {animal} does not exist.')
+        return value
+
 class TradeRule:
     def __init__(self, a1, a2, price):
         self.a1 = a1
@@ -147,6 +165,7 @@ class Game:
         self.options = {1: 'Roll dices',
                         2: 'Trade',
                         3: 'Exit'}
+        self.trade = Trade()
 
     def resolve_turn(self):
         def _roll_dices():
