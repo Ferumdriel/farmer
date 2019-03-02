@@ -11,23 +11,35 @@ class AutoName(Enum):
     def __repr__(self):
         return self.name
 
+class AnimalState:
+    def __init__(self, name, value, friendly):
+        self.name = name
+        self.value = value
+        self.friendly = friendly
 
-class Animal(AutoName):
-    RABBIT = auto()
-    SHEEP = auto()
-    PIG = auto()
-    COW = auto()
-    HORSE = auto()
 
-    SMALL_DOG = auto()
-    BIG_DOG = auto()
+class AnimalType(AutoName):
+    RABBIT = AnimalState(auto(), 1, True)
+    SHEEP = AnimalState(auto(), 6, True)
+    PIG = AnimalState(auto(), 12, True)
+    COW = AnimalState(auto(), 36, True)
+    HORSE = AnimalState(auto(), 72, True)
 
-    FOX = auto()
-    WOLF = auto()
+    SMALL_DOG = AnimalState(auto(), 6, True)
+    BIG_DOG = AnimalState(auto(), 36, True)
+
+    FOX = AnimalState(auto(), 0, False)
+    WOLF = AnimalState(auto(), 0, False)
+
+    def is_tradeable(self):
+        return self.value.friendly
+
+    def get_value(self):
+        return self.value.value
 
     @staticmethod
     def get_farm_animals():
-        return [Animal.RABBIT, Animal.SHEEP, Animal.PIG, Animal.COW, Animal.HORSE]
+        return [AnimalType.RABBIT, AnimalType.SHEEP, AnimalType.PIG, AnimalType.COW, AnimalType.HORSE]
 
 
 class Breeder:
@@ -44,28 +56,28 @@ class Farm:
 
     def _initialize_animals(self):
         self.animals = {}
-        animals = Animal.get_farm_animals()
+        animals = AnimalType.get_farm_animals()
         for animal in animals:
             self.animals[animal] = 0
 
     def breed_animals(self, dice_animals: list):
         counter = collections.Counter(dice_animals)
-        if Animal.FOX in counter:
-            del counter[Animal.RABBIT]
-        if Animal.WOLF in counter:
-            counter = collections.Counter([Animal.WOLF])
+        if AnimalType.FOX in counter:
+            del counter[AnimalType.RABBIT]
+        if AnimalType.WOLF in counter:
+            counter = collections.Counter([AnimalType.WOLF])
         for animal, amount in counter.items():
             try:
                 bred_animals = Breeder.count_new_animals(self.animals[animal], amount)
                 self.animals[animal] += bred_animals
             except KeyError:
-                if animal == Animal.FOX:
+                if animal == AnimalType.FOX:
                     print('Oh no! Fox ate all your rabbits!')
-                    self.animals[Animal.RABBIT] = 0
-                elif animal == Animal.WOLF:
+                    self.animals[AnimalType.RABBIT] = 0
+                elif animal == AnimalType.WOLF:
                     print('Oh no! Wolf ate everything except horses!')
                     for farm_animal in self.animals.keys():
-                        if farm_animal != Animal.HORSE:
+                        if farm_animal != AnimalType.HORSE:
                             self.animals[farm_animal] = 0
 
     def print_state(self):
@@ -79,31 +91,12 @@ class Dice:
     def _get_side_animal_by_idx(self, side: int):
         return None if (side > len(self.animals) - 1 or len(self.animals) == 0) else self.animals[side]
 
-    def throw(self) -> Animal:
+    def throw(self) -> AnimalType:
         return self._get_side_animal_by_idx(random.randint(0, len(self.animals) - 1))
 
 
-class TradeValues:
-    def __init__(self):
-        self.values = {Animal.RABBIT: 1}
-        self.values[Animal.SHEEP] = self.values[Animal.RABBIT] * 6
-        self.values[Animal.PIG] = self.values[Animal.SHEEP] * 2
-        self.values[Animal.COW] = self.values[Animal.PIG] * 3
-        self.values[Animal.HORSE] = self.values[Animal.COW] * 2
-        self.values[Animal.SMALL_DOG] = self.values[Animal.RABBIT] * 6
-        self.values[Animal.BIG_DOG] = self.values[Animal.COW]
-
-    def get_value(self, animal: Animal):
-        value = 0
-        try:
-            value = self.values[animal]
-        except KeyError:
-            print(f'Key {animal} does not exist.')
-        return value
-
-
 class TradeRule:
-    def __init__(self, a1: Animal, a2: Animal):
+    def __init__(self, a1: AnimalType, a2: AnimalType):
         self.a1 = a1
         self.a2 = a2
 
@@ -113,31 +106,21 @@ class TradeRule:
 
 
 class Trade:
-    def __init__(self, trade_rules):
-        self.trade_rules = trade_rules
-        self.trade_values = TradeValues()
-
-    def trade(self, sold_animal: Animal, bought_animal: Animal, farm: Farm, desired_amount: int):
+    def trade(self, sold_animal: AnimalType, bought_animal: AnimalType, farm: Farm, desired_amount: int):
         if self.is_trade_possible(sold_animal, bought_animal, farm.animals[sold_animal], desired_amount):
             multiplier = self.get_multiplier(sold_animal, bought_animal)
             farm.animals[sold_animal] -= desired_amount * multiplier
             farm.animals[bought_animal] += desired_amount
 
-    def is_trade_possible(self, sold_animal: Animal, bought_animal: Animal, total_available: int,
+    def is_trade_possible(self, sold_animal: AnimalType, bought_animal: AnimalType, total_available: int,
                           desired_amount: int) -> bool:
-        if self.get_matching_rule(sold_animal, bought_animal) is None:
-            return False
-        return total_available / self.get_multiplier(sold_animal,bought_animal) >= desired_amount
+        if sold_animal.is_tradeable() and bought_animal.is_tradeable() and sold_animal != bought_animal:
+            return total_available / self.get_multiplier(sold_animal, bought_animal) >= desired_amount
+        return False
 
-    def get_matching_rule(self, a1: Animal, a2: Animal) -> TradeRule:
-        for rule in self.trade_rules:
-            if rule.is_both_present(a1, a2):
-                return rule
-        return None
-
-    def get_multiplier(self, sold_animal: Animal, bought_animal: Animal):
-        value1 = self.trade_values.get_value(sold_animal)
-        value2 = self.trade_values.get_value(bought_animal)
+    def get_multiplier(self, sold_animal: AnimalType, bought_animal: AnimalType):
+        value1 = sold_animal.get_value()
+        value2 = bought_animal.get_value()
         return value2 if value1 < value2 else 1 / value1
 
 
@@ -171,13 +154,14 @@ class TurnHandler:
 class Game:
     def __init__(self):
         self.farm = Farm()
-        self.dices = [Dice(6 * [Animal.RABBIT] + 3 * [Animal.SHEEP] + [Animal.PIG, Animal.COW, Animal.WOLF]),
-                      Dice(6 * [Animal.RABBIT] + 2 * [Animal.SHEEP, Animal.PIG] + [Animal.HORSE, Animal.FOX])]
+        self.dices = [
+            Dice(6 * [AnimalType.RABBIT] + 3 * [AnimalType.SHEEP] + [AnimalType.PIG, AnimalType.COW, AnimalType.WOLF]),
+            Dice(6 * [AnimalType.RABBIT] + 2 * [AnimalType.SHEEP, AnimalType.PIG] + [AnimalType.HORSE, AnimalType.FOX])]
         self.options = {1: 'Roll dices',
                         2: 'Trade',
                         3: 'Exit'}
         # FIXME Some variable to check if animal is tradeable might be better
-        self.trade = Trade([TradeRule(Animal.RABBIT, Animal.SHEEP)] )
+        self.trade = Trade()
 
     def resolve_turn(self):
         def _roll_dices():
