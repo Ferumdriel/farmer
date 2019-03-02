@@ -95,16 +95,6 @@ class Dice:
     def throw(self) -> AnimalType:
         return self._get_side_animal_by_idx(random.randint(0, len(self.animals_on_sides) - 1))
 
-
-class TradeRule:
-    def __init__(self, a1: AnimalType, a2: AnimalType):
-        self.a1 = a1
-        self.a2 = a2
-
-    def is_both_present(self, a1, a2):
-        return (a1 == self.a1 and a2 == self.a2) or (a1 == self.a2 and a2 == self.a1)
-
-
 class Trade:
     def trade(self, sold_animal: AnimalType, bought_animal: AnimalType, farm: Farm, desired_amount: int):
         if self.is_trade_possible(sold_animal, bought_animal, farm.animals[sold_animal], desired_amount):
