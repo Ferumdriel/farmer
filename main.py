@@ -90,10 +90,12 @@ class Dice:
         self.animals_on_sides = animals_on_sides
 
     def _get_side_animal_by_idx(self, side: int):
-        return None if (side > len(self.animals_on_sides) - 1 or len(self.animals_on_sides) == 0) else self.animals_on_sides[side]
+        return None if (side > len(self.animals_on_sides) - 1 or len(self.animals_on_sides) == 0) else \
+            self.animals_on_sides[side]
 
     def throw(self) -> AnimalType:
         return self._get_side_animal_by_idx(random.randint(0, len(self.animals_on_sides) - 1))
+
 
 class Trade:
     def trade(self, sold_animal: AnimalType, bought_animal: AnimalType, farm: Farm, desired_amount: int):
@@ -161,7 +163,12 @@ class Game:
             self.farm.print_state()
 
         self.print_options()
-        option = int(input('Enter value: '))
+        try:
+            option = int(input('Enter value: '))
+        except ValueError:
+            option = 0
+            print("Invalid number. Enter proper value.")
+
         if option == 1:
             _roll_dices()
         return option
@@ -179,7 +186,8 @@ class Game:
 
     def main_loop(self):
         option = self.resolve_turn()
-        while option in list(self.options.keys())[:-1]:
+        exit_loop = list(self.options.keys())[-1]
+        while option != exit_loop:
             option = self.resolve_turn()
 
 
