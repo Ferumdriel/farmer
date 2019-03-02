@@ -11,6 +11,7 @@ class AutoName(Enum):
     def __repr__(self):
         return self.name
 
+
 class AnimalState:
     def __init__(self, name, value, friendly):
         self.name = name
@@ -85,14 +86,14 @@ class Farm:
 
 
 class Dice:
-    def __init__(self, animals: list):
-        self.animals = animals
+    def __init__(self, animals_on_sides: list):
+        self.animals_on_sides = animals_on_sides
 
     def _get_side_animal_by_idx(self, side: int):
-        return None if (side > len(self.animals) - 1 or len(self.animals) == 0) else self.animals[side]
+        return None if (side > len(self.animals_on_sides) - 1 or len(self.animals_on_sides) == 0) else self.animals_on_sides[side]
 
     def throw(self) -> AnimalType:
-        return self._get_side_animal_by_idx(random.randint(0, len(self.animals) - 1))
+        return self._get_side_animal_by_idx(random.randint(0, len(self.animals_on_sides) - 1))
 
 
 class TradeRule:
@@ -102,7 +103,6 @@ class TradeRule:
 
     def is_both_present(self, a1, a2):
         return (a1 == self.a1 and a2 == self.a2) or (a1 == self.a2 and a2 == self.a1)
-
 
 
 class Trade:
