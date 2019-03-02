@@ -88,6 +88,7 @@ class Farm:
 class Dice:
     def __init__(self, animals_on_sides: list):
         self.animals_on_sides = animals_on_sides
+        self.result = None
 
     def _get_side_animal_by_idx(self, side: int):
         return None if (side > len(self.animals_on_sides) - 1 or len(self.animals_on_sides) == 0) else \
@@ -97,22 +98,28 @@ class Dice:
         return self._get_side_animal_by_idx(random.randint(0, len(self.animals_on_sides) - 1))
 
 
-class Trade:
-    def trade(self, sold_animal: AnimalType, bought_animal: AnimalType, farm: Farm, desired_amount: int):
-        if self.is_trade_possible(sold_animal, bought_animal, farm.animals[sold_animal], desired_amount):
-            multiplier = self.get_multiplier(sold_animal, bought_animal)
-            farm.animals[sold_animal] -= desired_amount * multiplier
-            farm.animals[bought_animal] += desired_amount
+class TradeRequest:
+    def __init__(self, sold_animal: AnimalType, bought_animal: AnimalType, farm: Farm, desired_amount: int):
+        self.sold_animal = sold_animal
+        self.bought_animal = bought_animal
+        self.farm = farm
+        self.desired_amount = desired_amount
 
-    def is_trade_possible(self, sold_animal: AnimalType, bought_animal: AnimalType, total_available: int,
-                          desired_amount: int) -> bool:
-        if sold_animal.is_tradeable() and bought_animal.is_tradeable() and sold_animal != bought_animal:
-            return total_available / self.get_multiplier(sold_animal, bought_animal) >= desired_amount
+    def trade(self):
+        if self.is_trade_possible():
+            multiplier = self.get_multiplier()
+            self.farm.animals[self.sold_animal] -= self.desired_amount * multiplier
+            self.farm.animals[self.bought_animal] += self.desired_amount
+
+    def is_trade_possible(self) -> bool:
+        if self.sold_animal.is_tradeable() and self.bought_animal.is_tradeable() and self.sold_animal != self.bought_animal:
+            total_available = self.farm.animals[self.sold_animal]
+            return total_available / self.get_multiplier() >= self.desired_amount
         return False
 
-    def get_multiplier(self, sold_animal: AnimalType, bought_animal: AnimalType):
-        value1 = sold_animal.get_value()
-        value2 = bought_animal.get_value()
+    def get_multiplier(self):
+        value1 = self.sold_animal.get_value()
+        value2 = self.bought_animal.get_value()
         return value2 if value1 < value2 else 1 / value1
 
 
@@ -153,7 +160,7 @@ class Game:
                         2: 'Trade',
                         3: 'Exit'}
         # FIXME Some variable to check if animal is tradeable might be better
-        self.trade = Trade()
+        self.trade = TradeRequest()
 
     def resolve_turn(self):
         def _roll_dices():
