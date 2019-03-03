@@ -186,19 +186,38 @@ class Game:
             self.farm.breed_animals(animals)
             self.farm.print_state()
 
-        def _get_animal_number():
+        def _get_int_input(min_val=None, max_val=None):
             def _try_get_int():
-                animal_option = None
+                def _check_limit_condition():
+                    def _is_no_limit():
+                        return max_val is None and min_val is None
+
+                    def _is_exceeds_bottom_limit():
+                        return max_val is not None and min_val is None and _inp < min_val
+
+                    def _is_exceeds_top_limit():
+                        return max_val is not None and min_val is None and _inp < min_val
+
+                    def _is_in_limit_range():
+                        return max_val is not None and min_val is not None and (_inp < min_val or _inp > max_val)
+
+                    if not _is_no_limit():
+                        return _is_exceeds_bottom_limit() or _is_exceeds_top_limit() or _is_in_limit_range()
+
                 try:
-                    animal_option = int(input('Enter value: '))
+                    _inp = int(input('Enter value: '))
+                    if min_val is not None or max_val is not None:
+                        if _check_limit_condition():
+                            raise ValueError
                 except ValueError:
                     print("Invalid number. Enter proper value.")
-                return animal_option
+                    _inp = None
+                return _inp
 
-            animal_option = _try_get_int()
-            while not isinstance(animal_option, int):
-                animal_option = _try_get_int()
-            return animal_option
+            inp = _try_get_int()
+            while not isinstance(inp, int):
+                inp = _try_get_int()
+            return inp
 
         self.print_options()
         try:
@@ -210,12 +229,13 @@ class Game:
         if option == 1:
             _roll_dices()
         elif option == 2:
-            print(f'Which animal to sell?\n{self.trade_options}')
-            sell_animal_option = _get_animal_number()
-            print(f'Which animal to buy?\n{self.trade_options}')
-            buy_animal_option = _get_animal_number()
+            print(f'Which animal to sell?\nAvailable options: {self.trade_options}')
+            sell_animal_option = _get_int_input(0, len(self.trade_options))
+            print(f'Which animal to buy?\nAvailable options: {self.trade_options}')
+            buy_animal_option = _get_int_input(0, len(self.trade_options))
             print('How many animals to buy?')
-            amount_to_buy = int(input('Enter value: '))
+            amount_to_buy = _get_int_input(1)
+
             trade = TradeRequest(self.trade_options[sell_animal_option], self.trade_options[buy_animal_option],
                                  self.farm, amount_to_buy)
             trade.trade()
