@@ -1,29 +1,24 @@
-from abc import abstractmethod, ABC
+from actions import DiceRoller, Trader, Cheatmode, Exit
 
 
-class Option(ABC):
-    @abstractmethod
-    def execute(self):
-        pass
-
-
-class DiceRoller(Option):
-    def __init__(self, dices, farm):
-        self.dices = dices
-        self.farm = farm
-
-    def execute(self):
-        animals = [dice.throw() for dice in self.dices]
-        print(f'You threw: {animals}')
-        self.farm.breed_animals(animals)
-        self.farm.print_state()
-
-class Trader(Option):
-    pass
 class GameMenu:
     def __init__(self, game):
-        self.options = {1: 'Roll dices',
-                        2: 'Trade',
-                        3: 'CHEATMODE',
-                        4: 'Exit'}
         self.game = game
+        self.options = {1: DiceRoller('Roll dices', game.dices, game.farm),
+                        2: Trader('Trade', game.farm),
+                        3: Cheatmode('CHEATMODE', game.farm),
+                        4: Exit('Exit')}
+
+    def get_option(self, option_number):
+        return self.options[option_number]
+
+    def print_options(self):
+        print('Which option do you choose?')
+        print(self.options_txt)
+
+    @property
+    def options_txt(self):
+        opt_text = ''
+        for key, value in self.options.items():
+            opt_text += f'{key}. {value}\n'
+        return opt_text

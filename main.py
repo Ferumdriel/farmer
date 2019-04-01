@@ -1,160 +1,7 @@
-import abc
-import collections
-from enum import Enum, auto
-import random
-
-
-class AutoName(Enum):
-    def _generate_next_value_(name, start, count, last_values):
-        return name
-
-    def __repr__(self):
-        return self.name
-
-
-class AnimalState:
-    def __init__(self, name, value, friendly):
-        self.name = name
-        self.value = value
-        self.friendly = friendly
-
-
-class AnimalType(AutoName):
-    RABBIT = AnimalState(auto(), 1, True)
-    SHEEP = AnimalState(auto(), 6, True)
-    PIG = AnimalState(auto(), 12, True)
-    COW = AnimalState(auto(), 36, True)
-    HORSE = AnimalState(auto(), 72, True)
-
-    SMALL_DOG = AnimalState(auto(), 6, True)
-    BIG_DOG = AnimalState(auto(), 36, True)
-
-    FOX = AnimalState(auto(), 0, False)
-    WOLF = AnimalState(auto(), 0, False)
-
-    def is_tradeable(self):
-        return self.value.friendly
-
-    def get_value(self):
-        return self.value.value
-
-    @staticmethod
-    def get_farm_animals():
-        return [AnimalType.RABBIT, AnimalType.SHEEP, AnimalType.PIG, AnimalType.COW, AnimalType.HORSE]
-
-
-class Breeder:
-    @staticmethod
-    def count_new_animals(present_animals: int, animals_on_sides: int) -> int:
-        return 0 if animals_on_sides == 0 else int((present_animals + animals_on_sides) / 2)
-
-
-class Farm:
-    def __init__(self, animals=None):
-        self.animals = animals
-        if self.animals is None:
-            self._initialize_animals()
-
-    def _initialize_animals(self):
-        self.animals = {}
-        animals = AnimalType.get_farm_animals()
-        for animal in animals:
-            self.animals[animal] = 0
-
-    def breed_animals(self, dice_animals: list):
-        counter = collections.Counter(dice_animals)
-        if AnimalType.FOX in counter:
-            del counter[AnimalType.RABBIT]
-        if AnimalType.WOLF in counter:
-            counter = collections.Counter([AnimalType.WOLF])
-        for animal, amount in counter.items():
-            try:
-                bred_animals = Breeder.count_new_animals(self.animals[animal], amount)
-                self.animals[animal] += bred_animals
-            except KeyError:
-                if animal == AnimalType.FOX:
-                    print('Oh no! Fox ate all your rabbits!')
-                    self.animals[AnimalType.RABBIT] = 0
-                elif animal == AnimalType.WOLF:
-                    print('Oh no! Wolf ate everything except horses!')
-                    for farm_animal in self.animals.keys():
-                        if farm_animal != AnimalType.HORSE:
-                            self.animals[farm_animal] = 0
-
-    def print_state(self):
-        print(self.animals)
-
-
-class Dice:
-    def __init__(self, animals_on_sides: list):
-        self.animals_on_sides = animals_on_sides
-        self.result = None
-
-    def _get_side_animal_by_idx(self, side: int):
-        return None if (side > len(self.animals_on_sides) - 1 or len(self.animals_on_sides) == 0) else \
-            self.animals_on_sides[side]
-
-    def throw(self) -> AnimalType:
-        return self._get_side_animal_by_idx(random.randint(0, len(self.animals_on_sides) - 1))
-
-
-class TradeRequest:
-    def __init__(self, sold_animal: AnimalType, bought_animal: AnimalType, farm: Farm, desired_amount: int):
-        self.sold_animal = sold_animal
-        self.bought_animal = bought_animal
-        self.farm = farm
-        self.desired_amount = desired_amount
-
-    def trade(self):
-        sold, bought = 0, 0
-        if self.is_trade_possible():
-            multiplier = self.get_multiplier()
-            sold = self.desired_amount * multiplier
-            bought = self.desired_amount
-            self.farm.animals[self.sold_animal] -= self.desired_amount * multiplier
-            self.farm.animals[self.bought_animal] += self.desired_amount
-        else:
-            print('Trade is not possible.')
-        return sold, bought
-
-    def is_trade_possible(self) -> bool:
-        if self.sold_animal.is_tradeable() and self.bought_animal.is_tradeable() and self.sold_animal != self.bought_animal:
-            total_available = self.farm.animals[self.sold_animal]
-            return total_available / self.get_multiplier() >= self.desired_amount
-        return False
-
-    def get_multiplier(self):
-        value1 = self.sold_animal.get_value()
-        value2 = self.bought_animal.get_value()
-        return value2 if value1 < value2 else 1 / value1
-
-
-# TODO: Command design pattern might be a good suit for Turn and TurnHandler
-class Turn:
-    def __init__(self, action, previous_turn=None):
-        self.action = action
-        self.previous_turn = previous_turn
-
-
-class TurnHandler:
-    def __init__(self):
-        self.turns = []
-        self.options = {1: 'Roll dices',
-                        2: 'Trade',
-                        3: 'CHEATMODE',
-                        4: 'Exit'}
-
-    def resolve_turn(self):
-        self.print_possibilities()
-        option = self.pick_option()
-
-    def print_possibilities(self):
-        print(f'Which option do you choose?')
-        for key, value in self.options.items():
-            print(f'{key}. {value}')
-
-    def pick_option(self):
-        return input()
+from menu import GameMenu
+from entities import AnimalType, Dice, Farm
+from utils import InputListener
+from actions import Turn
 
 
 class Game:
@@ -163,105 +10,20 @@ class Game:
         self.dices = [
             Dice(6 * [AnimalType.RABBIT] + 3 * [AnimalType.SHEEP] + [AnimalType.PIG, AnimalType.COW, AnimalType.WOLF]),
             Dice(6 * [AnimalType.RABBIT] + 2 * [AnimalType.SHEEP, AnimalType.PIG] + [AnimalType.HORSE, AnimalType.FOX])]
-        self.options = {1: 'Roll dices',
-                        2: 'Trade',
-                        3: 'CHEATMODE',
-                        4: 'Exit'}
-        self._initialise_trade_options()
-
-    def _initialise_trade_options(self):
-        trade_options = {}
-        for numb, animal in enumerate(list(AnimalType)):
-            if animal.is_tradeable():
-                trade_options[numb] = animal
-                print(f'Added {animal} with number: {numb}')
-            else:
-                numb -= 1
-        self.trade_options = trade_options
+        self.menu = GameMenu(self)
+        self.turns = []
 
     def resolve_turn(self):
-        def _roll_dices():
-            animals = [dice.throw() for dice in self.dices]
-            print(f'You threw: {animals}')
-            self.farm.breed_animals(animals)
-            self.farm.print_state()
-
-        def _get_int_input(min_val=None, max_val=None):
-            def _try_get_int():
-                def _check_limit_condition():
-                    def _is_no_limit():
-                        return max_val is None and min_val is None
-
-                    def _is_exceeds_bottom_limit():
-                        return max_val is not None and min_val is None and _inp < min_val
-
-                    def _is_exceeds_top_limit():
-                        return max_val is not None and min_val is None and _inp < min_val
-
-                    def _is_in_limit_range():
-                        return max_val is not None and min_val is not None and (_inp < min_val or _inp > max_val)
-
-                    if not _is_no_limit():
-                        return _is_exceeds_bottom_limit() or _is_exceeds_top_limit() or _is_in_limit_range()
-
-                try:
-                    _inp = int(input('Enter value: '))
-                    if min_val is not None or max_val is not None:
-                        if _check_limit_condition():
-                            raise ValueError
-                except ValueError:
-                    print("Invalid number. Enter proper value.")
-                    _inp = None
-                return _inp
-
-            inp = _try_get_int()
-            while not isinstance(inp, int):
-                inp = _try_get_int()
-            return inp
-
-        self.print_options()
-        try:
-            option = int(input('Enter value: '))
-        except ValueError:
-            option = 0
-            print("Invalid number. Enter proper value.")
-
-        if option == 1:
-            _roll_dices()
-        elif option == 2:
-            print(f'Which animal to sell?\nAvailable options: {self.trade_options}')
-            sell_animal_option = _get_int_input(0, len(self.trade_options))
-            print(f'Which animal to buy?\nAvailable options: {self.trade_options}')
-            buy_animal_option = _get_int_input(0, len(self.trade_options))
-            print('How many animals to buy?')
-            amount_to_buy = _get_int_input(1)
-
-            trade = TradeRequest(self.trade_options[sell_animal_option], self.trade_options[buy_animal_option],
-                                 self.farm, amount_to_buy)
-            trade.trade()
-            self.farm.print_state()
-        elif option == 3:
-            for animal, amount in self.farm.animals.items():
-                self.farm.animals[animal] = 999
-            self.farm.print_state()
-        return option
-
-    def print_options(self):
-        print('Which option do you choose?')
-        print(self.options_txt)
-
-    @property
-    def options_txt(self):
-        opt_text = ''
-        for key, value in self.options.items():
-            opt_text += f'{key}. {value}\n'
-        return opt_text
+        self.menu.print_options()
+        picked_option = InputListener.get_int_input()
+        option = self.menu.get_option(picked_option)
+        turn = Turn(option)
+        turn.resolve_turn()
+        self.turns.append(turn)
 
     def main_loop(self):
-        option = self.resolve_turn()
-        exit_loop = list(self.options.keys())[-1]
-        while option != exit_loop:
-            option = self.resolve_turn()
+        while True:
+            self.resolve_turn()
 
 
 if __name__ == '__main__':
